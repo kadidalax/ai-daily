@@ -1,0 +1,16 @@
+services:
+  ai-daily:
+    build: .
+    container_name: ai-daily
+    ports:
+      - "25333:25333"
+    volumes:
+      - ./data:/app/data
+    environment:
+      - TZ=Asia/Shanghai
+    restart: unless-stopped
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "3"

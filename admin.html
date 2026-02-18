@@ -1,0 +1,1619 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>AI Daily - 管理后台</title>
+  <style>
+* { margin: 0; padding: 0; box-sizing: border-box; }
+/* 自定义滚动条 */
+::-webkit-scrollbar { width: 8px; height: 8px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: #444; border-radius: 4px; }
+::-webkit-scrollbar-thumb:hover { background: #555; }
+::-webkit-scrollbar-corner { background: transparent; }
+/* Firefox */
+* { scrollbar-width: thin; scrollbar-color: #444 transparent; }
+:root {
+  --bg-primary: #0f0f0f;
+  --bg-secondary: #1a1a1a;
+  --bg-tertiary: #252525;
+  --border-color: #333;
+  --text-primary: #e0e0e0;
+  --text-secondary: #999;
+  --accent: #4f9eff;
+  --accent-hover: #3a8aee;
+  --success: #4caf50;
+  --danger: #f44336;
+  --warning: #ff9800;
+  --sidebar-width: 220px;
+  --content-max-width: 900px;
+}
+html, body { height: 100%; }
+body {
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  background: linear-gradient(135deg, #0a0a0a 0%, #121218 100%);
+  color: var(--text-primary);
+  display: flex;
+  justify-content: center;
+  align-items: flex-start;
+  padding: 20px;
+  min-height: 100vh;
+}
+.app-container {
+  display: flex;
+  width: 100%;
+  max-width: calc(var(--sidebar-width) + var(--content-max-width) + 40px);
+  min-height: calc(100vh - 40px);
+  background: var(--bg-primary);
+  border-radius: 12px;
+  border: 1px solid var(--border-color);
+  overflow: hidden;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
+}
+.sidebar {
+  width: var(--sidebar-width);
+  background: var(--bg-secondary);
+  border-right: 1px solid var(--border-color);
+  padding: 20px 0;
+  flex-shrink: 0;
+  display: flex;
+  flex-direction: column;
+  position: sticky;
+  top: 0;
+  height: calc(100vh - 40px);
+  overflow-y: auto;
+}
+.sidebar-header {
+  padding: 10px 20px 20px;
+  border-bottom: 1px solid var(--border-color);
+  margin-bottom: 10px;
+}
+.sidebar-header h1 { font-size: 1.4rem; color: var(--accent); }
+.sidebar-header p { font-size: 0.8rem; color: var(--text-secondary); margin-top: 4px; }
+.nav-list { flex: 1; display: flex; flex-direction: column; }
+.nav-item {
+  display: flex;
+  align-items: center;
+  padding: 12px 20px;
+  color: var(--text-secondary);
+  cursor: pointer;
+  transition: all 0.2s;
+  border-left: 3px solid transparent;
+}
+.nav-item:hover { background: var(--bg-tertiary); color: var(--text-primary); }
+.nav-item.active { background: var(--bg-tertiary); color: var(--accent); border-left-color: var(--accent); }
+.nav-item span.icon { margin-right: 12px; font-size: 1.1rem; }
+.nav-item.logout { color: var(--danger); margin-top: auto; border-top: 1px solid var(--border-color); padding-top: 16px; }
+.main-content {
+  flex: 1;
+  padding: 30px 40px;
+  max-width: var(--content-max-width);
+  overflow-y: auto;
+  height: calc(100vh - 40px);
+}
+.section { display: none; }
+.section.active { display: block; }
+.section-title { font-size: 1.5rem; margin-bottom: 8px; color: var(--text-primary); }
+.section-desc { color: var(--text-secondary); margin-bottom: 24px; font-size: 0.9rem; }
+.form-group { margin-bottom: 20px; }
+.form-group label { display: block; margin-bottom: 6px; color: var(--text-secondary); font-size: 0.9rem; }
+.form-row { display: flex; gap: 12px; align-items: flex-end; }
+.form-row .form-group { flex: 1; margin-bottom: 0; }
+.hint { color: var(--text-secondary); font-size: 0.85rem; margin-top: 4px; display: block; }
+input[type="text"], input[type="password"], input[type="number"], select {
+  width: 100%;
+  padding: 10px 14px;
+  background: var(--bg-tertiary);
+  border: 1px solid var(--border-color);
+  border-radius: 6px;
+  color: var(--text-primary);
+  font-size: 0.95rem;
+  transition: border-color 0.2s;
+}
+input:focus, select:focus { outline: none; border-color: var(--accent); }
+input::placeholder { color: var(--text-secondary); }
+.btn {
+  padding: 10px 20px;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 0.9rem;
+  font-weight: 500;
+  transition: all 0.2s;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+.btn-primary { background: var(--accent); color: #fff; }
+.btn-primary:hover { background: var(--accent-hover); }
+.btn-secondary { background: var(--bg-tertiary); color: var(--text-primary); border: 1px solid var(--border-color); }
+.btn-secondary:hover { border-color: var(--accent); }
+.btn-success { background: var(--success); color: #fff; }
+.btn-danger { background: var(--danger); color: #fff; }
+.btn-sm { padding: 6px 12px; font-size: 0.85rem; }
+.btn:disabled { opacity: 0.5; cursor: not-allowed; }
+.card-actions { display: flex; gap: 10px; margin-top: 16px; padding-top: 16px; border-top: 1px solid var(--border-color); }
+.card-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; flex-wrap: wrap; gap: 10px; }
+.card-header .card-title { margin-bottom: 0; }
+.card-header-actions { display: flex; gap: 8px; flex-wrap: wrap; }
+.input-with-hint { position: relative; }
+.api-key-hint { position: absolute; right: 12px; top: 50%; transform: translateY(-50%); color: var(--text-secondary); font-size: 0.8rem; pointer-events: none; }
+.switch-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 14px 0;
+  border-bottom: 1px solid var(--border-color);
+}
+.switch-row:last-child { border-bottom: none; }
+.switch-info h4 { font-size: 0.95rem; margin-bottom: 2px; }
+.switch-info p { font-size: 0.8rem; color: var(--text-secondary); }
+.switch { position: relative; width: 48px; height: 26px; }
+.switch input { opacity: 0; width: 0; height: 0; }
+.slider {
+  position: absolute;
+  cursor: pointer;
+  inset: 0;
+  background: var(--bg-tertiary);
+  border-radius: 26px;
+  transition: 0.3s;
+  border: 1px solid var(--border-color);
+}
+.slider:before {
+  content: "";
+  position: absolute;
+  height: 18px;
+  width: 18px;
+  left: 3px;
+  bottom: 3px;
+  background: #fff;
+  border-radius: 50%;
+  transition: 0.3s;
+}
+input:checked + .slider { background: var(--accent); border-color: var(--accent); }
+input:checked + .slider:before { transform: translateX(22px); }
+/* RSS 工具栏 */
+.rss-toolbar {
+  display: flex;
+  gap: 16px;
+  margin-bottom: 16px;
+  flex-wrap: wrap;
+  align-items: center;
+}
+.rss-search { flex: 1; min-width: 200px; }
+.rss-search input { width: 100%; }
+.rss-batch-actions {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  flex-wrap: wrap;
+}
+.batch-select-all {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  cursor: pointer;
+  padding: 6px 12px;
+  background: var(--bg-tertiary);
+  border-radius: 6px;
+  font-size: 0.85rem;
+}
+.batch-select-all input { width: 16px; height: 16px; cursor: pointer; }
+/* RSS 列表 */
+.rss-list {
+  background: var(--bg-secondary);
+  border-radius: 8px;
+  border: 1px solid var(--border-color);
+  overflow: hidden;
+  max-height: 500px;
+  overflow-y: auto;
+}
+.rss-item {
+  display: flex;
+  align-items: center;
+  padding: 10px 16px;
+  border-bottom: 1px solid var(--border-color);
+  gap: 10px;
+}
+.rss-item:last-child { border-bottom: none; }
+.rss-item.selected { background: rgba(79, 158, 255, 0.1); }
+.rss-item .rss-checkbox { flex-shrink: 0; width: 18px; height: 18px; cursor: pointer; }
+.rss-item .switch { flex-shrink: 0; }
+.rss-info { flex: 1; min-width: 0; }
+.rss-info .source { font-weight: 500; margin-bottom: 2px; font-size: 0.9rem; }
+.rss-info .url { font-size: 0.75rem; color: var(--text-secondary); word-break: break-all; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.rss-actions { display: flex; gap: 6px; flex-shrink: 0; }
+/* RSS 分页 */
+.rss-pagination {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 8px;
+  margin-top: 16px;
+  flex-wrap: wrap;
+}
+.rss-pagination button {
+  padding: 6px 12px;
+  background: var(--bg-tertiary);
+  border: 1px solid var(--border-color);
+  border-radius: 4px;
+  color: var(--text-primary);
+  cursor: pointer;
+  font-size: 0.85rem;
+}
+.rss-pagination button:hover { border-color: var(--accent); }
+.rss-pagination button.active { background: var(--accent); border-color: var(--accent); }
+.rss-pagination button:disabled { opacity: 0.5; cursor: not-allowed; }
+.rss-pagination .page-info { color: var(--text-secondary); font-size: 0.85rem; }
+.rss-status { color: var(--text-secondary); font-size: 0.85rem; margin-left: auto; }
+.add-rss-form { display: flex; gap: 12px; margin-bottom: 16px; }
+.add-rss-form input { flex: 1; }
+.card {
+  background: var(--bg-secondary);
+  border: 1px solid var(--border-color);
+  border-radius: 8px;
+  padding: 20px;
+  margin-bottom: 20px;
+}
+.card-title {
+  font-size: 1rem;
+  margin-bottom: 16px;
+  padding-bottom: 12px;
+  border-bottom: 1px solid var(--border-color);
+}
+.warning-card {
+  background: rgba(255,152,0,0.1);
+  border-color: var(--warning);
+  margin-top: 20px;
+}
+.warning-card p { color: var(--warning); font-size: 0.9rem; }
+.badge { display: inline-block; padding: 4px 10px; border-radius: 4px; font-size: 0.8rem; font-weight: 500; }
+.badge-success { background: rgba(76,175,80,0.2); color: var(--success); }
+.badge-warning { background: rgba(255,152,0,0.2); color: var(--warning); }
+.badge-danger { background: rgba(244,67,54,0.2); color: var(--danger); }
+.toast {
+  position: fixed;
+  top: 20px;
+  right: 20px;
+  padding: 14px 20px;
+  background: var(--bg-secondary);
+  border: 1px solid var(--border-color);
+  border-radius: 8px;
+  z-index: 1000;
+  animation: slideIn 0.3s ease;
+  max-width: 360px;
+}
+.toast.success { border-color: var(--success); }
+.toast.error { border-color: var(--danger); }
+@keyframes slideIn {
+  from { transform: translateX(100%); opacity: 0; }
+  to { transform: translateX(0); opacity: 1; }
+}
+/* 模态框 */
+.modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.6);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+  opacity: 0;
+  visibility: hidden;
+  transition: all 0.2s;
+}
+.modal-overlay.active {
+  opacity: 1;
+  visibility: visible;
+}
+.modal {
+  background: var(--bg-secondary);
+  border-radius: 12px;
+  padding: 24px;
+  width: 90%;
+  max-width: 450px;
+  transform: scale(0.9);
+  transition: transform 0.2s;
+}
+.modal-overlay.active .modal {
+  transform: scale(1);
+}
+.modal-title {
+  font-size: 1.2rem;
+  font-weight: 600;
+  margin-bottom: 20px;
+}
+.modal-actions {
+  display: flex;
+  gap: 10px;
+  justify-content: flex-end;
+  margin-top: 20px;
+}
+.action-bar {
+  display: flex;
+  gap: 12px;
+  margin-top: 24px;
+  padding-top: 20px;
+  border-top: 1px solid var(--border-color);
+}
+.history-item { padding: 14px 0; border-bottom: 1px solid var(--border-color); }
+.history-item:last-child { border-bottom: none; }
+.history-header { display: flex; justify-content: space-between; margin-bottom: 8px; }
+.history-date { font-weight: 500; }
+.history-articles { font-size: 0.85rem; color: var(--text-secondary); }
+.history-articles li { margin: 4px 0; }
+@media (max-width: 768px) {
+  .app-container { flex-direction: column; }
+  .sidebar {
+    width: 100%;
+    height: auto;
+    position: relative;
+    padding: 10px;
+  }
+  .sidebar-header { width: 100%; padding: 10px; border-bottom: none; margin-bottom: 0; }
+  .nav-list { flex-direction: row; flex-wrap: wrap; }
+  .nav-item { padding: 8px 12px; border-left: none; border-bottom: 2px solid transparent; font-size: 0.85rem; }
+  .nav-item.active { border-left-color: transparent; border-bottom-color: var(--accent); }
+  .nav-item.logout { margin-top: 0; border-top: none; }
+  .main-content { padding: 20px; }
+  .form-row { flex-direction: column; }
+  .add-rss-form { flex-direction: column; }
+}
+  </style>
+</head>
+<body>
+  <div class="app-container">
+    <nav class="sidebar">
+      <div class="sidebar-header">
+        <h1>📰 AI Daily</h1>
+        <p>管理后台</p>
+      </div>
+      <div class="nav-list">
+        <div class="nav-item active" data-section="llm">
+          <span class="icon">🤖</span> LLM 设置
+        </div>
+        <div class="nav-item" data-section="rss">
+          <span class="icon">📡</span> RSS 源
+        </div>
+        <div class="nav-item" data-section="digest">
+          <span class="icon">⚙️</span> 摘要设置
+        </div>
+        <div class="nav-item" data-section="telegram">
+          <span class="icon">📱</span> Telegram
+        </div>
+        <div class="nav-item" data-section="schedule">
+          <span class="icon">⏰</span> 定时任务
+        </div>
+        <div class="nav-item" data-section="history">
+          <span class="icon">📊</span> 运行历史
+        </div>
+        <div class="nav-item" data-section="logs">
+          <span class="icon">📋</span> 系统日志
+        </div>
+        <div class="nav-item" data-section="account">
+          <span class="icon">🔐</span> 账号设置
+        </div>
+        <div class="nav-item logout" onclick="logout()">
+          <span class="icon">🚪</span> 退出登录
+        </div>
+      </div>
+    </nav>
+
+    <main class="main-content">
+      <!-- LLM 设置 -->
+      <section id="sec-llm" class="section active">
+        <h2 class="section-title">LLM 设置</h2>
+        <p class="section-desc">配置大语言模型 API，支持 OpenAI 兼容格式</p>
+        
+        <div class="card">
+          <div class="card-header">
+            <div class="card-title">🤖 主 LLM（必填）</div>
+            <div class="card-header-actions">
+              <button class="btn btn-secondary btn-sm" onclick="testSingleLLM('primary')">🧪 测试</button>
+              <button class="btn btn-primary btn-sm" onclick="saveLLM('primary')">💾 保存</button>
+            </div>
+          </div>
+          <div class="form-group">
+            <label>API Base URL</label>
+            <input type="text" id="llm-baseUrl" placeholder="https://api.openai.com/v1">
+            <small class="hint">支持任何 OpenAI 兼容 API</small>
+          </div>
+          <div class="form-group">
+            <label>API Key</label>
+            <div class="input-with-hint">
+              <input type="password" id="llm-apiKey" placeholder="sk-...">
+              <small class="api-key-hint" id="llm-apiKey-hint"></small>
+            </div>
+          </div>
+          <div class="form-row">
+            <div class="form-group">
+              <label>模型</label>
+              <select id="llm-model"><option value="">点击获取模型列表</option></select>
+            </div>
+            <button class="btn btn-secondary btn-sm" onclick="fetchModels('primary')">🔄 获取模型</button>
+          </div>
+        </div>
+        
+        <div class="card">
+          <div class="card-header">
+            <div class="card-title">🔄 备用 LLM（可选）</div>
+            <div class="card-header-actions">
+              <button class="btn btn-secondary btn-sm" onclick="testSingleLLM('backup')">🧪 测试</button>
+              <button class="btn btn-primary btn-sm" onclick="saveLLM('backup')">💾 保存</button>
+            </div>
+          </div>
+          <p class="hint" style="margin-bottom:16px">当主 LLM 请求失败时，自动切换到备用 LLM</p>
+          <div class="form-group">
+            <label>API Base URL</label>
+            <input type="text" id="llm-backup-baseUrl" placeholder="https://api.deepseek.com/v1">
+          </div>
+          <div class="form-group">
+            <label>API Key</label>
+            <div class="input-with-hint">
+              <input type="password" id="llm-backup-apiKey" placeholder="sk-...">
+              <small class="api-key-hint" id="llm-backup-apiKey-hint"></small>
+            </div>
+          </div>
+          <div class="form-row">
+            <div class="form-group">
+              <label>模型</label>
+              <select id="llm-backup-model"><option value="">点击获取模型列表</option></select>
+            </div>
+            <button class="btn btn-secondary btn-sm" onclick="fetchModels('backup')">🔄 获取模型</button>
+          </div>
+        </div>
+        
+        <div class="card">
+          <div class="card-title">⚙️ 高级设置</div>
+          <div class="form-row">
+            <div class="form-group">
+              <label>请求超时（秒）</label>
+              <input type="number" id="llm-timeout" value="120" min="10" max="300">
+            </div>
+            <div class="form-group">
+              <label>失败重试次数</label>
+              <input type="number" id="llm-maxRetries" value="2" min="0" max="5">
+            </div>
+          </div>
+          <div class="switch-row" style="border-bottom:none;padding-top:8px">
+            <div class="switch-info">
+              <h4>主 LLM 失败时使用备用</h4>
+              <p>启用后，当主 LLM 所有重试都失败时，自动切换到备用 LLM</p>
+            </div>
+            <label class="switch">
+              <input type="checkbox" id="llm-useBackupOnFail" checked>
+              <span class="slider"></span>
+            </label>
+          </div>
+        </div>
+      </section>
+
+      <!-- RSS 源 -->
+      <section id="sec-rss" class="section">
+        <h2 class="section-title">RSS 源管理</h2>
+        <p class="section-desc">管理 <span id="rss-total-count">0</span> 个 RSS 订阅源</p>
+        
+        <!-- 搜索和批量操作 -->
+        <div class="rss-toolbar">
+          <div class="rss-search">
+            <input type="text" id="rss-search" placeholder="🔍 搜索来源名称或URL..." oninput="filterRSS()">
+          </div>
+          <div class="rss-batch-actions">
+            <label class="batch-select-all">
+              <input type="checkbox" id="rss-select-all" onchange="toggleSelectAll()">
+              <span>全选</span>
+            </label>
+            <button class="btn btn-sm btn-secondary" onclick="batchToggle(true)">✓ 批量启用</button>
+            <button class="btn btn-sm btn-secondary" onclick="batchToggle(false)">✗ 批量禁用</button>
+            <button class="btn btn-sm btn-danger" onclick="batchDelete()">🗑 批量删除</button>
+          </div>
+        </div>
+        
+        <!-- 添加新RSS -->
+        <div class="add-rss-form">
+          <input type="text" id="new-rss-source" placeholder="来源名称">
+          <input type="text" id="new-rss-url" placeholder="RSS URL">
+          <button class="btn btn-primary" onclick="addRSS()">➕ 添加</button>
+        </div>
+        
+        <!-- RSS列表（带分页） -->
+        <div class="rss-list" id="rss-list"></div>
+        
+        <!-- 分页控制 -->
+        <div class="rss-pagination" id="rss-pagination"></div>
+        
+        <div class="action-bar">
+          <button class="btn btn-primary" onclick="saveRSS()">💾 保存 RSS</button>
+          <span class="rss-status" id="rss-status"></span>
+        </div>
+      </section>
+
+      <!-- 摘要设置 -->
+      <section id="sec-digest" class="section">
+        <h2 class="section-title">摘要设置</h2>
+        <p class="section-desc">配置文章筛选和摘要生成参数</p>
+        <div class="card">
+          <div class="card-header">
+            <div class="card-title">📝 筛选参数</div>
+            <div class="card-header-actions">
+              <button class="btn btn-primary btn-sm" onclick="saveConfig()">💾 保存</button>
+            </div>
+          </div>
+          <div class="form-group">
+            <label>抓取时间范围（小时）</label>
+            <input type="number" id="rss-hours" value="48" min="1" max="168">
+          </div>
+          <div class="form-group">
+            <label>最大推送文章数</label>
+            <input type="number" id="rss-topN" value="15" min="1" max="50">
+            <small class="hint">每次运行最多推送的高分文章数量（实际评分文章数为此值的2倍）</small>
+          </div>
+          <div class="form-group">
+            <label>输出语言</label>
+            <select id="rss-language">
+              <option value="zh">中文</option>
+              <option value="en">English</option>
+            </select>
+          </div>
+        </div>
+      </section>
+
+      <!-- Telegram -->
+      <section id="sec-telegram" class="section">
+        <h2 class="section-title">Telegram 推送</h2>
+        <p class="section-desc">配置 Telegram Bot 进行消息推送</p>
+        <div class="card">
+          <div class="card-header">
+            <div class="card-title">📱 Bot 配置</div>
+            <div class="card-header-actions">
+              <button class="btn btn-secondary btn-sm" onclick="testTelegram()">📤 测试</button>
+              <button class="btn btn-primary btn-sm" onclick="saveConfig()">💾 保存</button>
+            </div>
+          </div>
+          <div class="switch-row" style="padding-top:0">
+            <div class="switch-info">
+              <h4>启用 Telegram 推送</h4>
+              <p>开启后将自动推送摘要到 Telegram</p>
+            </div>
+            <label class="switch">
+              <input type="checkbox" id="telegram-enabled">
+              <span class="slider"></span>
+            </label>
+          </div>
+          <div class="form-group" style="margin-top:16px">
+            <label>Bot Token</label>
+            <input type="password" id="telegram-botToken" placeholder="从 @BotFather 获取">
+          </div>
+          <div class="form-group">
+            <label>Chat ID</label>
+            <input type="text" id="telegram-chatId" placeholder="用户或群组 ID">
+          </div>
+          <div class="form-group">
+            <label>每次推送数量</label>
+            <input type="number" id="telegram-pushCount" value="10" min="1" max="30">
+          </div>
+        </div>
+        
+        <div class="card">
+          <div class="card-header">
+            <div class="card-title">🔗 Webhook 设置</div>
+            <div class="card-header-actions">
+              <button class="btn btn-success btn-sm" onclick="autoSetWebhook()">🚀 一键设置</button>
+              <button class="btn btn-secondary btn-sm" onclick="checkWebhook()">🔍 检查</button>
+            </div>
+          </div>
+          <p class="hint" style="margin-bottom:16px">设置 Webhook 后，点击消息按钮才能正常响应（如"阅读中文全文"）</p>
+          <div class="form-group">
+            <label>Webhook URL</label>
+            <div class="form-row" style="align-items:center">
+              <input type="text" id="telegram-webhookUrl" placeholder="https://your-domain.com/webhook/telegram" style="flex:1">
+              <button class="btn btn-secondary btn-sm" onclick="autoFillWebhook()" style="white-space:nowrap">📍 自动填充</button>
+            </div>
+            <small class="hint">点击"自动填充"使用当前访问地址，或手动输入你的公网地址</small>
+          </div>
+          <div id="webhook-status" class="hint" style="margin-bottom:12px"></div>
+          <div class="card-actions" style="border-top:none;margin-top:0;padding-top:0">
+            <button class="btn btn-primary btn-sm" onclick="setWebhook()">🔗 手动设置</button>
+            <button class="btn btn-danger btn-sm" onclick="deleteWebhook()">🗑️ 删除</button>
+          </div>
+        </div>
+      </section>
+
+      <!-- 定时任务 -->
+      <section id="sec-schedule" class="section">
+        <h2 class="section-title">定时任务</h2>
+        <p class="section-desc">设置自动运行时间</p>
+        <div class="card">
+          <div class="card-header">
+            <div class="card-title">⏰ 定时配置</div>
+            <div class="card-header-actions">
+              <button class="btn btn-primary btn-sm" onclick="saveConfig()">💾 保存</button>
+            </div>
+          </div>
+          <div class="switch-row" style="padding-top:0">
+            <div class="switch-info">
+              <h4>启用定时任务</h4>
+              <p>按设定时间自动抓取和推送</p>
+            </div>
+            <label class="switch">
+              <input type="checkbox" id="schedule-enabled">
+              <span class="slider"></span>
+            </label>
+          </div>
+          <div class="form-group" style="margin-top:16px">
+            <label>Cron 表达式（分 时 * * *）</label>
+            <input type="text" id="schedule-cron" placeholder="0 8 * * *">
+            <small class="hint">示例：0 8 * * * = 每天早上8点</small>
+          </div>
+        </div>
+      </section>
+
+      <!-- 运行历史 -->
+      <section id="sec-history" class="section">
+        <div class="card-header" style="margin-bottom:16px">
+          <div>
+            <h2 class="section-title" style="margin-bottom:4px">运行历史</h2>
+            <p class="section-desc" style="margin-bottom:0">查看最近的运行记录</p>
+          </div>
+          <div class="card-header-actions">
+            <button class="btn btn-secondary btn-sm" onclick="loadHistory()">🔄 刷新</button>
+            <button class="btn btn-success btn-sm" onclick="runDigest()">▶️ 立即运行</button>
+          </div>
+        </div>
+        <div class="card" id="history-container">
+          <p class="hint">加载中...</p>
+        </div>
+      </section>
+
+      <!-- 系统日志 -->
+      <section id="sec-logs" class="section">
+        <div class="card-header" style="margin-bottom:16px">
+          <div>
+            <h2 class="section-title" style="margin-bottom:4px">系统日志</h2>
+            <p class="section-desc" style="margin:0">查看系统运行日志，便于排查问题</p>
+          </div>
+          <div class="card-header-actions">
+            <select id="logLevel" style="padding:6px 10px;border-radius:6px;border:1px solid var(--border-color);background:var(--bg-secondary);color:var(--text-primary);margin-right:8px">
+              <option value="all">全部级别</option>
+              <option value="info">信息</option>
+              <option value="warn">警告</option>
+              <option value="error">错误</option>
+            </select>
+            <input type="number" id="logLimit" value="100" min="10" max="500" style="width:70px;padding:6px 10px;border-radius:6px;border:1px solid var(--border-color);background:var(--bg-secondary);color:var(--text-primary);margin-right:8px" title="日志数量">
+            <button class="btn btn-primary btn-sm" onclick="loadLogs()">🔄 刷新</button>
+            <button class="btn btn-danger btn-sm" onclick="clearLogs()" style="margin-left:8px">🗑️ 清空</button>
+          </div>
+        </div>
+        <div class="card">
+          <div id="logsContainer" style="max-height:600px;overflow-y:auto;font-family:monospace;font-size:13px;background:var(--bg-tertiary);border-radius:8px;padding:12px">
+            <p style="color:var(--text-secondary)">点击「刷新」获取最新日志...</p>
+          </div>
+        </div>
+      </section>
+
+      <!-- 账号设置 -->
+      <section id="sec-account" class="section">
+        <h2 class="section-title">账号设置</h2>
+        <p class="section-desc">修改管理员账号和密码</p>
+        <div class="card">
+          <div class="card-header">
+            <div class="card-title">🔐 修改登录凭据</div>
+            <div class="card-header-actions">
+              <button class="btn btn-primary btn-sm" onclick="saveAccount()">💾 保存</button>
+            </div>
+          </div>
+          <div class="form-group">
+            <label>用户名</label>
+            <input type="text" id="admin-username" placeholder="admin">
+          </div>
+          <div class="form-group">
+            <label>当前密码</label>
+            <input type="password" id="admin-current-password" placeholder="输入当前密码以验证身份">
+          </div>
+          <div class="form-group">
+            <label>新密码</label>
+            <input type="password" id="admin-new-password" placeholder="留空则不修改密码">
+          </div>
+          <div class="form-group">
+            <label>确认新密码</label>
+            <input type="password" id="admin-confirm-password" placeholder="再次输入新密码">
+          </div>
+          <div class="hint" style="margin-top:12px;padding:10px;background:rgba(255,193,7,0.1);border-radius:6px">
+            ⚠️ 修改账号信息后需要重新登录。请牢记新的用户名和密码。
+          </div>
+        </div>
+      </section>
+    </main>
+    
+    <!-- 编辑 RSS 模态框 -->
+    <div class="modal-overlay" id="edit-rss-modal" onclick="closeEditModal(event)">
+      <div class="modal" onclick="event.stopPropagation()">
+        <div class="modal-title">✏️ 编辑 RSS 源</div>
+        <input type="hidden" id="edit-rss-index">
+        <div class="form-group">
+          <label>来源名称</label>
+          <input type="text" id="edit-rss-source" placeholder="来源名称">
+        </div>
+        <div class="form-group">
+          <label>RSS URL</label>
+          <input type="text" id="edit-rss-url" placeholder="RSS URL">
+        </div>
+        <div class="modal-actions">
+          <button class="btn btn-secondary" onclick="closeEditModal()">取消</button>
+          <button class="btn btn-primary" onclick="saveEditRSS()">💾 保存</button>
+        </div>
+      </div>
+    </div>
+  </div>
+  <script>
+let config = {};
+let rssFeeds = [];
+
+// 菜单切换
+document.querySelectorAll('.nav-item[data-section]').forEach(item => {
+  item.addEventListener('click', () => {
+    document.querySelectorAll('.nav-item').forEach(i => i.classList.remove('active'));
+    document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
+    item.classList.add('active');
+    document.getElementById('sec-' + item.dataset.section).classList.add('active');
+    if (item.dataset.section === 'history') loadHistory();
+    if (item.dataset.section === 'rss') loadRSS();
+    if (item.dataset.section === 'logs') loadLogs();
+  });
+});
+
+// Toast 提示
+function toast(msg, type = 'success') {
+  const t = document.createElement('div');
+  t.className = 'toast ' + type;
+  t.textContent = msg;
+  document.body.appendChild(t);
+  setTimeout(() => t.remove(), 3000);
+}
+
+// 统一处理API响应
+async function handleApiResponse(res) {
+  if (res.status === 401) {
+    window.location.href = '/login';
+    throw new Error('未授权');
+  }
+  return res;
+}
+
+// 加载配置
+async function loadConfig() {
+  try {
+    const res = await handleApiResponse(await fetch('/api/config'));
+    config = await res.json();
+    
+    // 主 LLM
+    document.getElementById('llm-baseUrl').value = config.llm?.baseUrl || '';
+    document.getElementById('llm-apiKey').value = '';  // 密码框清空，不显示 ***
+    document.getElementById('llm-apiKey-hint').textContent = config.llm?.apiKeyHint || '';
+    const modelSelect = document.getElementById('llm-model');
+    if (config.llm?.model) {
+      modelSelect.innerHTML = '<option value="' + config.llm.model + '">' + config.llm.model + '</option>';
+    }
+    
+    // 备用 LLM
+    document.getElementById('llm-backup-baseUrl').value = config.llmBackup?.baseUrl || '';
+    document.getElementById('llm-backup-apiKey').value = '';  // 密码框清空
+    document.getElementById('llm-backup-apiKey-hint').textContent = config.llmBackup?.apiKeyHint || '';
+    const backupModelSelect = document.getElementById('llm-backup-model');
+    if (config.llmBackup?.model) {
+      backupModelSelect.innerHTML = '<option value="' + config.llmBackup.model + '">' + config.llmBackup.model + '</option>';
+    }
+    
+    // LLM 高级设置
+    document.getElementById('llm-timeout').value = (config.llmSettings?.timeout || 120000) / 1000;
+    document.getElementById('llm-maxRetries').value = config.llmSettings?.maxRetries ?? 2;
+    document.getElementById('llm-useBackupOnFail').checked = config.llmSettings?.useBackupOnFail ?? true;
+    
+    // RSS 设置
+    document.getElementById('rss-hours').value = config.rss?.hours || 48;
+    document.getElementById('rss-topN').value = config.rss?.topN || 15;
+    document.getElementById('rss-language').value = config.rss?.language || 'zh';
+    
+    // Telegram 设置
+    document.getElementById('telegram-enabled').checked = config.telegram?.enabled || false;
+    document.getElementById('telegram-botToken').value = config.telegram?.botToken || '';
+    document.getElementById('telegram-chatId').value = config.telegram?.chatId || '';
+    document.getElementById('telegram-pushCount').value = config.telegram?.pushCount || 10;
+    
+    // 定时任务
+    document.getElementById('schedule-enabled').checked = config.schedule?.enabled || false;
+    document.getElementById('schedule-cron').value = config.schedule?.cron || '0 8 * * *';
+  } catch (e) {
+    toast('加载配置失败', 'error');
+  }
+}
+
+// 保存配置
+async function saveConfig() {
+  const newConfig = {
+    llm: {
+      baseUrl: document.getElementById('llm-baseUrl').value,
+      apiKey: document.getElementById('llm-apiKey').value,
+      model: document.getElementById('llm-model').value,
+    },
+    llmBackup: {
+      baseUrl: document.getElementById('llm-backup-baseUrl').value,
+      apiKey: document.getElementById('llm-backup-apiKey').value,
+      model: document.getElementById('llm-backup-model').value,
+    },
+    llmSettings: {
+      timeout: parseInt(document.getElementById('llm-timeout').value) * 1000,
+      maxRetries: parseInt(document.getElementById('llm-maxRetries').value),
+      useBackupOnFail: document.getElementById('llm-useBackupOnFail').checked,
+    },
+    rss: {
+      hours: parseInt(document.getElementById('rss-hours').value),
+      topN: parseInt(document.getElementById('rss-topN').value),
+      language: document.getElementById('rss-language').value,
+    },
+    telegram: {
+      enabled: document.getElementById('telegram-enabled').checked,
+      botToken: document.getElementById('telegram-botToken').value,
+      chatId: document.getElementById('telegram-chatId').value,
+      pushCount: parseInt(document.getElementById('telegram-pushCount').value),
+    },
+    schedule: {
+      enabled: document.getElementById('schedule-enabled').checked,
+      cron: document.getElementById('schedule-cron').value,
+    },
+  };
+  try {
+    const res = await fetch('/api/config', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(newConfig),
+    });
+    if (res.ok) toast('保存成功');
+    else toast('保存失败', 'error');
+  } catch (e) {
+    toast('保存失败', 'error');
+  }
+}
+
+// 获取模型列表
+async function fetchModels(type = 'primary') {
+  const btn = event.target;
+  btn.disabled = true;
+  btn.textContent = '获取中...';
+  
+  const isBackup = type === 'backup';
+  const baseUrlId = isBackup ? 'llm-backup-baseUrl' : 'llm-baseUrl';
+  const apiKeyId = isBackup ? 'llm-backup-apiKey' : 'llm-apiKey';
+  const modelSelectId = isBackup ? 'llm-backup-model' : 'llm-model';
+  
+  try {
+    const baseUrl = document.getElementById(baseUrlId).value;
+    const apiKey = document.getElementById(apiKeyId).value;
+    
+    // 允许不填写，后端会使用已保存的配置
+    const res = await fetch('/api/llm/models', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ baseUrl, apiKey, type }),
+    });
+    const data = await res.json();
+    
+    if (data.error) {
+      toast(data.error, 'error');
+    } else if (data.models?.length) {
+      const select = document.getElementById(modelSelectId);
+      const current = select.value;
+      select.innerHTML = data.models.map(m =>
+        '<option value="' + m + '"' + (m === current ? ' selected' : '') + '>' + m + '</option>'
+      ).join('');
+      toast('获取到 ' + data.models.length + ' 个模型');
+    } else {
+      toast('未找到模型', 'error');
+    }
+  } catch (e) {
+    toast('获取失败', 'error');
+  }
+  btn.disabled = false;
+  btn.textContent = '🔄 获取模型';
+}
+
+// 单独保存 LLM 配置
+async function saveLLM(type) {
+  const btn = event.target;
+  btn.disabled = true;
+  const originalText = btn.textContent;
+  btn.textContent = '保存中...';
+  
+  try {
+    const isBackup = type === 'backup';
+    const prefix = isBackup ? 'llm-backup-' : 'llm-';
+    
+    const llmConfig = {
+      baseUrl: document.getElementById(prefix + 'baseUrl').value,
+      apiKey: document.getElementById(prefix + 'apiKey').value,
+      model: document.getElementById(prefix + (isBackup ? 'model' : 'model')).value,
+    };
+    
+    // 只更新对应的 LLM 配置
+    const updateData = isBackup ? { llmBackup: llmConfig } : { llm: llmConfig };
+    
+    const res = await fetch('/api/config', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(updateData),
+    });
+    
+    if (res.ok) {
+      toast(isBackup ? '✅ 备用 LLM 已保存' : '✅ 主 LLM 已保存');
+      // 重新加载配置以更新提示
+      await loadConfig();
+    } else {
+      toast('保存失败', 'error');
+    }
+  } catch (e) {
+    toast('保存失败', 'error');
+  }
+  
+  btn.disabled = false;
+  btn.textContent = originalText;
+}
+
+// 单独测试 LLM 连接
+async function testSingleLLM(type) {
+  const btn = event.target;
+  btn.disabled = true;
+  const originalText = btn.textContent;
+  btn.textContent = '测试中...';
+  
+  try {
+    const isBackup = type === 'backup';
+    const prefix = isBackup ? 'llm-backup-' : 'llm-';
+    
+    const baseUrl = document.getElementById(prefix + 'baseUrl').value;
+    const apiKey = document.getElementById(prefix + 'apiKey').value;
+    const model = document.getElementById(prefix + 'model').value;
+    
+    // 允许不填写，后端会使用已保存的配置
+    
+    const res = await fetch('/api/llm/test-single', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ baseUrl, apiKey, model, type }),
+    });
+    const data = await res.json();
+    
+    if (data.success) {
+      toast('✅ 连接成功');
+    } else {
+      toast('❌ ' + (data.error || '连接失败'), 'error');
+    }
+  } catch (e) {
+    toast('测试失败', 'error');
+  }
+  
+  btn.disabled = false;
+  btn.textContent = originalText;
+}
+
+// 测试所有 LLM 连接
+async function testLLM() {
+  const btn = event.target;
+  btn.disabled = true;
+  btn.textContent = '测试中...';
+  
+  try {
+    await saveConfig();
+    const res = await fetch('/api/llm/test', { method: 'POST' });
+    const data = await res.json();
+    
+    if (data.success) {
+      let msg = '✅ 主 LLM 连接成功';
+      if (data.backupTested) {
+        msg += data.backupSuccess ? '\n✅ 备用 LLM 连接成功' : '\n❌ 备用 LLM 连接失败';
+      }
+      toast(msg);
+    } else {
+      toast('❌ ' + (data.message || '连接失败'), 'error');
+    }
+  } catch (e) {
+    toast('测试失败', 'error');
+  }
+  
+  btn.disabled = false;
+  btn.textContent = '🧪 测试连接';
+}
+
+// RSS 管理 - 分页和批量操作
+let rssPage = 1;
+const RSS_PER_PAGE = 20;
+let rssSearchTerm = '';
+let rssSelected = new Set();
+
+async function loadRSS() {
+  try {
+    const res = await fetch('/api/rss');
+    rssFeeds = await res.json();
+    rssSelected.clear();
+    rssPage = 1;
+    rssSearchTerm = '';
+    document.getElementById('rss-search').value = '';
+    document.getElementById('rss-select-all').checked = false;
+    renderRSS();
+  } catch (e) {
+    toast('加载 RSS 失败', 'error');
+  }
+}
+
+function getFilteredRSS() {
+  if (!rssSearchTerm) return rssFeeds;
+  const term = rssSearchTerm.toLowerCase();
+  return rssFeeds.filter(f => 
+    f.source.toLowerCase().includes(term) || 
+    f.url.toLowerCase().includes(term)
+  );
+}
+
+function renderRSS() {
+  const filtered = getFilteredRSS();
+  const total = filtered.length;
+  const totalPages = Math.ceil(total / RSS_PER_PAGE) || 1;
+  
+  // 确保页码有效
+  if (rssPage > totalPages) rssPage = totalPages;
+  if (rssPage < 1) rssPage = 1;
+  
+  const start = (rssPage - 1) * RSS_PER_PAGE;
+  const pageItems = filtered.slice(start, start + RSS_PER_PAGE);
+  
+  // 更新统计
+  document.getElementById('rss-total-count').textContent = rssFeeds.length;
+  const enabledCount = rssFeeds.filter(f => f.enabled).length;
+  document.getElementById('rss-status').textContent = 
+    `已启用 ${enabledCount}/${rssFeeds.length}` + 
+    (rssSearchTerm ? ` | 搜索结果 ${total} 条` : '');
+  
+  // 渲染列表
+  const container = document.getElementById('rss-list');
+  if (!pageItems.length) {
+    container.innerHTML = '<div style="padding:20px;text-align:center;color:var(--text-secondary)">' +
+      (rssSearchTerm ? '没有匹配的 RSS 源' : '暂无 RSS 源') + '</div>';
+  } else {
+    container.innerHTML = pageItems.map((feed, i) => {
+      const realIndex = rssFeeds.indexOf(feed);
+      const isSelected = rssSelected.has(realIndex);
+      return `
+        <div class="rss-item ${isSelected ? 'selected' : ''}" data-index="${realIndex}">
+          <input type="checkbox" class="rss-checkbox" ${isSelected ? 'checked' : ''} 
+            onchange="toggleSelect(${realIndex})">
+          <label class="switch">
+            <input type="checkbox" ${feed.enabled ? 'checked' : ''} onchange="toggleRSS(${realIndex})">
+            <span class="slider"></span>
+          </label>
+          <div class="rss-info">
+            <div class="source">${escapeHtml(feed.source)}</div>
+            <div class="url" title="${escapeHtml(feed.url)}">${escapeHtml(feed.url)}</div>
+          </div>
+          <div class="rss-actions">
+            <button class="btn btn-secondary btn-sm" onclick="editRSS(${realIndex})">✏️</button>
+            <button class="btn btn-danger btn-sm" onclick="deleteRSS(${realIndex})">🗑️</button>
+          </div>
+        </div>
+      `;
+    }).join('');
+  }
+  
+  // 渲染分页
+  renderPagination(totalPages);
+  
+  // 更新全选状态
+  updateSelectAllState();
+}
+
+function escapeHtml(str) {
+  return str.replace(/&/g,'&').replace(/</g,'<').replace(/>/g,'>').replace(/"/g,'"');
+}
+
+function renderPagination(totalPages) {
+  const container = document.getElementById('rss-pagination');
+  if (totalPages <= 1) {
+    container.innerHTML = '';
+    return;
+  }
+  
+  let html = `<button onclick="goToPage(1)" ${rssPage === 1 ? 'disabled' : ''}>首页</button>`;
+  html += `<button onclick="goToPage(${rssPage - 1})" ${rssPage === 1 ? 'disabled' : ''}>上一页</button>`;
+  
+  // 显示页码
+  const maxVisible = 5;
+  let startPage = Math.max(1, rssPage - Math.floor(maxVisible / 2));
+  let endPage = Math.min(totalPages, startPage + maxVisible - 1);
+  if (endPage - startPage < maxVisible - 1) {
+    startPage = Math.max(1, endPage - maxVisible + 1);
+  }
+  
+  for (let p = startPage; p <= endPage; p++) {
+    html += `<button onclick="goToPage(${p})" class="${p === rssPage ? 'active' : ''}">${p}</button>`;
+  }
+  
+  html += `<button onclick="goToPage(${rssPage + 1})" ${rssPage === totalPages ? 'disabled' : ''}>下一页</button>`;
+  html += `<button onclick="goToPage(${totalPages})" ${rssPage === totalPages ? 'disabled' : ''}>末页</button>`;
+  html += `<span class="page-info">第 ${rssPage}/${totalPages} 页</span>`;
+  
+  container.innerHTML = html;
+}
+
+function goToPage(page) {
+  rssPage = page;
+  renderRSS();
+}
+
+function filterRSS() {
+  rssSearchTerm = document.getElementById('rss-search').value.trim();
+  rssPage = 1;
+  rssSelected.clear();
+  document.getElementById('rss-select-all').checked = false;
+  renderRSS();
+}
+
+function toggleSelect(index) {
+  if (rssSelected.has(index)) {
+    rssSelected.delete(index);
+  } else {
+    rssSelected.add(index);
+  }
+  updateSelectAllState();
+  renderRSS();
+}
+
+function toggleSelectAll() {
+  const checked = document.getElementById('rss-select-all').checked;
+  const pageItems = getCurrentPageItems();
+  
+  if (checked) {
+    // 只选中当前页面的项
+    pageItems.forEach(feed => {
+      const index = rssFeeds.indexOf(feed);
+      rssSelected.add(index);
+    });
+  } else {
+    // 只取消选中当前页面的项
+    pageItems.forEach(feed => {
+      const index = rssFeeds.indexOf(feed);
+      rssSelected.delete(index);
+    });
+  }
+  renderRSS();
+}
+
+function getCurrentPageItems() {
+  const filtered = getFilteredRSS();
+  const start = (rssPage - 1) * RSS_PER_PAGE;
+  return filtered.slice(start, start + RSS_PER_PAGE);
+}
+
+function updateSelectAllState() {
+  const pageItems = getCurrentPageItems();
+  const allSelected = pageItems.length > 0 && pageItems.every(feed => rssSelected.has(rssFeeds.indexOf(feed)));
+  document.getElementById('rss-select-all').checked = allSelected;
+}
+
+function toggleRSS(index) {
+  rssFeeds[index].enabled = !rssFeeds[index].enabled;
+  renderRSS();
+}
+
+function deleteRSS(index) {
+  rssFeeds.splice(index, 1);
+  rssSelected.delete(index);
+  // 更新选中索引（删除后索引可能变化）
+  const newSelected = new Set();
+  rssSelected.forEach(i => {
+    if (i < index) newSelected.add(i);
+    else if (i > index) newSelected.add(i - 1);
+  });
+  rssSelected = newSelected;
+  renderRSS();
+}
+
+function editRSS(index) {
+  const feed = rssFeeds[index];
+  document.getElementById('edit-rss-index').value = index;
+  document.getElementById('edit-rss-source').value = feed.source;
+  document.getElementById('edit-rss-url').value = feed.url;
+  document.getElementById('edit-rss-modal').classList.add('active');
+}
+
+function closeEditModal(event) {
+  if (event && event.target !== event.currentTarget) return;
+  document.getElementById('edit-rss-modal').classList.remove('active');
+}
+
+function saveEditRSS() {
+  const index = parseInt(document.getElementById('edit-rss-index').value);
+  const source = document.getElementById('edit-rss-source').value.trim();
+  const url = document.getElementById('edit-rss-url').value.trim();
+  
+  if (!source || !url) {
+    toast('请填写来源名称和 URL', 'error');
+    return;
+  }
+  
+  rssFeeds[index].source = source;
+  rssFeeds[index].url = url;
+  closeEditModal();
+  renderRSS();
+  toast('已更新 RSS 源');
+}
+
+function addRSS() {
+  const source = document.getElementById('new-rss-source').value.trim();
+  const url = document.getElementById('new-rss-url').value.trim();
+  if (!source || !url) {
+    toast('请填写来源名称和 URL', 'error');
+    return;
+  }
+  rssFeeds.unshift({ source, url, enabled: true }); // 添加到开头
+  rssPage = 1;
+  rssSearchTerm = '';
+  document.getElementById('rss-search').value = '';
+  renderRSS();
+  document.getElementById('new-rss-source').value = '';
+  document.getElementById('new-rss-url').value = '';
+  toast('已添加 RSS 源');
+}
+
+// 批量操作
+function batchToggle(enable) {
+  if (rssSelected.size === 0) {
+    toast('请先选择要操作的 RSS 源', 'error');
+    return;
+  }
+  rssSelected.forEach(index => {
+    rssFeeds[index].enabled = enable;
+  });
+  renderRSS();
+  toast(`已${enable ? '启用' : '禁用'} ${rssSelected.size} 个 RSS 源`);
+}
+
+function batchDelete() {
+  if (rssSelected.size === 0) {
+    toast('请先选择要删除的 RSS 源', 'error');
+    return;
+  }
+  if (!confirm(`确定要删除选中的 ${rssSelected.size} 个 RSS 源吗？`)) return;
+  
+  // 从大到小排序索引，避免删除时索引错位
+  const indices = Array.from(rssSelected).sort((a, b) => b - a);
+  indices.forEach(index => {
+    rssFeeds.splice(index, 1);
+  });
+  rssSelected.clear();
+  renderRSS();
+  toast(`已删除 ${indices.length} 个 RSS 源`);
+}
+
+async function saveRSS() {
+  try {
+    const res = await fetch('/api/rss', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(rssFeeds),
+    });
+    if (res.ok) toast('RSS 保存成功');
+    else toast('保存失败', 'error');
+  } catch (e) {
+    toast('保存失败', 'error');
+  }
+}
+
+// 运行
+async function runDigest() {
+  const btn = event.target;
+  btn.disabled = true;
+  btn.textContent = '运行中...';
+  try {
+    const res = await fetch('/api/run', { method: 'POST' });
+    const data = await res.json();
+    toast(data.message);
+  } catch (e) {
+    toast('运行失败', 'error');
+  }
+  btn.disabled = false;
+  btn.textContent = '▶️ 立即运行';
+}
+
+// 历史
+async function loadHistory() {
+  try {
+    const res = await fetch('/api/history');
+    const history = await res.json();
+    const container = document.getElementById('history-container');
+    if (!history.length) {
+      container.innerHTML = '<p class="hint">暂无运行记录</p>';
+      return;
+    }
+    container.innerHTML = history.slice(0, 10).map(h => `
+      <div class="history-item">
+        <div class="history-header">
+          <span class="history-date">${h.date}</span>
+          <span class="badge badge-success">${h.count} 篇</span>
+        </div>
+        <ul class="history-articles">
+          ${(h.articles || []).slice(0, 5).map(a => '<li>' + a.title + ' (' + a.score + '分)</li>').join('')}
+        </ul>
+      </div>
+    `).join('');
+  } catch (e) {
+    toast('加载历史失败', 'error');
+  }
+}
+
+// Telegram 测试
+async function testTelegram() {
+  const btn = event.target;
+  btn.disabled = true;
+  btn.textContent = '发送中...';
+  
+  try {
+    await saveConfig();
+    const res = await fetch('/api/telegram/test', { method: 'POST' });
+    const data = await res.json();
+    
+    if (data.success) {
+      toast('✅ 测试消息已发送，请检查 Telegram');
+    } else {
+      toast('❌ ' + (data.message || '发送失败'), 'error');
+    }
+  } catch (e) {
+    toast('发送失败', 'error');
+  }
+  
+  btn.disabled = false;
+  btn.textContent = '📤 测试推送';
+}
+
+// Webhook 管理
+function autoFillWebhook() {
+  const currentUrl = window.location.origin;
+  const webhookUrl = currentUrl + '/webhook/telegram';
+  document.getElementById('telegram-webhookUrl').value = webhookUrl;
+  toast('已自动填充 Webhook URL');
+}
+
+async function autoSetWebhook() {
+  // 先自动填充
+  autoFillWebhook();
+  // 然后设置
+  await setWebhook();
+}
+
+async function checkWebhook() {
+  const statusDiv = document.getElementById('webhook-status');
+  statusDiv.textContent = '检查中...';
+  
+  try {
+    const res = await fetch('/api/telegram/webhook');
+    const data = await res.json();
+    
+    if (data.success) {
+      if (data.url) {
+        statusDiv.innerHTML = `✅ 已设置: <code>${data.url}</code>` + 
+          (data.lastErrorMessage ? `<br>⚠️ 最近错误: ${data.lastErrorMessage}` : '');
+        document.getElementById('telegram-webhookUrl').value = data.url;
+      } else {
+        statusDiv.textContent = '⚠️ 未设置 Webhook';
+      }
+    } else {
+      statusDiv.textContent = '❌ ' + (data.message || '检查失败');
+    }
+  } catch (e) {
+    statusDiv.textContent = '❌ 检查失败';
+  }
+}
+
+async function setWebhook() {
+  const webhookUrl = document.getElementById('telegram-webhookUrl').value.trim();
+  if (!webhookUrl) {
+    toast('请输入 Webhook URL', 'error');
+    return;
+  }
+  
+  const statusDiv = document.getElementById('webhook-status');
+  statusDiv.textContent = '设置中...';
+  
+  try {
+    const res = await fetch('/api/telegram/webhook', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ webhookUrl }),
+    });
+    const data = await res.json();
+    
+    if (data.success) {
+      toast('✅ ' + data.message);
+      statusDiv.textContent = '✅ Webhook 设置成功';
+    } else {
+      toast('❌ ' + (data.message || '设置失败'), 'error');
+      statusDiv.textContent = '❌ ' + (data.message || '设置失败');
+    }
+  } catch (e) {
+    toast('设置失败', 'error');
+    statusDiv.textContent = '❌ 设置失败';
+  }
+}
+
+async function deleteWebhook() {
+  const statusDiv = document.getElementById('webhook-status');
+  statusDiv.textContent = '删除中...';
+  
+  try {
+    const res = await fetch('/api/telegram/webhook', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ webhookUrl: '' }),
+    });
+    const data = await res.json();
+    
+    if (data.success) {
+      toast('✅ ' + data.message);
+      statusDiv.textContent = '⚠️ Webhook 已删除';
+      document.getElementById('telegram-webhookUrl').value = '';
+    } else {
+      toast('❌ ' + (data.message || '删除失败'), 'error');
+      statusDiv.textContent = '❌ ' + (data.message || '删除失败');
+    }
+  } catch (e) {
+    toast('删除失败', 'error');
+    statusDiv.textContent = '❌ 删除失败';
+  }
+}
+
+// 账号管理
+async function loadAccount() {
+  try {
+    const res = await fetch('/api/admin/account');
+    if (res.ok) {
+      const data = await res.json();
+      document.getElementById('admin-username').value = data.username || '';
+    }
+  } catch (e) {
+    console.error('加载账号信息失败', e);
+  }
+}
+
+async function saveAccount() {
+  const username = document.getElementById('admin-username').value.trim();
+  const currentPassword = document.getElementById('admin-current-password').value;
+  const newPassword = document.getElementById('admin-new-password').value;
+  const confirmPassword = document.getElementById('admin-confirm-password').value;
+
+  if (!username) {
+    toast('用户名不能为空', 'error');
+    return;
+  }
+
+  if (!currentPassword) {
+    toast('请输入当前密码以验证身份', 'error');
+    return;
+  }
+
+  if (newPassword && newPassword !== confirmPassword) {
+    toast('两次输入的新密码不一致', 'error');
+    return;
+  }
+
+  if (newPassword && newPassword.length < 6) {
+    toast('新密码长度至少6位', 'error');
+    return;
+  }
+
+  try {
+    const res = await fetch('/api/admin/account', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        username,
+        currentPassword,
+        newPassword: newPassword || undefined,
+      }),
+    });
+    const data = await res.json();
+    
+    if (data.success) {
+      toast('账号信息已更新，请重新登录');
+      document.getElementById('admin-current-password').value = '';
+      document.getElementById('admin-new-password').value = '';
+      document.getElementById('admin-confirm-password').value = '';
+      setTimeout(() => {
+        document.cookie = 'token=; path=/; max-age=0';
+        window.location.href = '/login';
+      }, 1500);
+    } else {
+      toast(data.message || '保存失败', 'error');
+    }
+  } catch (e) {
+    toast('保存失败', 'error');
+  }
+}
+
+// 退出登录
+async function logout() {
+  if (confirm('确定要退出登录吗？')) {
+    try {
+      await fetch('/api/logout', { method: 'POST' });
+    } catch (e) {}
+    document.cookie = 'token=; path=/; max-age=0';
+    window.location.href = '/login';
+  }
+}
+
+// ==================== 日志功能 ====================
+async function loadLogs() {
+  const container = document.getElementById('logsContainer');
+  const level = document.getElementById('logLevel').value;
+  const limit = document.getElementById('logLimit').value || 100;
+  
+  container.innerHTML = '<p style="color:var(--text-secondary)">加载中...</p>';
+  
+  try {
+    const params = new URLSearchParams({ limit });
+    if (level !== 'all') params.append('level', level);
+    
+    const res = await fetch('/api/logs?' + params.toString());
+    if (!res.ok) throw new Error('获取日志失败');
+    
+    const logs = await res.json();
+    
+    if (logs.length === 0) {
+      container.innerHTML = '<p style="color:var(--text-secondary)">暂无日志</p>';
+      return;
+    }
+    
+    const levelColors = {
+      info: '#4ade80',
+      warn: '#facc15', 
+      error: '#f87171'
+    };
+    
+    container.innerHTML = logs.map(log => {
+      const time = new Date(log.time).toLocaleString('zh-CN');
+      const color = levelColors[log.level] || '#9ca3af';
+      const levelTag = `<span style="color:${color};font-weight:bold">[${log.level.toUpperCase()}]</span>`;
+      return `<div style="padding:4px 0;border-bottom:1px solid var(--border-color)">
+        <span style="color:var(--text-secondary)">${time}</span> ${levelTag} ${escapeHtml(log.message)}
+      </div>`;
+    }).join('');
+    
+  } catch (e) {
+    container.innerHTML = `<p style="color:var(--danger)">❌ ${e.message}</p>`;
+  }
+}
+
+async function clearLogs() {
+  if (!confirm('确定要清空所有日志吗？')) return;
+  
+  try {
+    const res = await fetch('/api/logs/clear', { method: 'POST' });
+    if (!res.ok) throw new Error('清空失败');
+    
+    document.getElementById('logsContainer').innerHTML = '<p style="color:var(--text-secondary)">日志已清空</p>';
+    alert('✅ 日志已清空');
+  } catch (e) {
+    alert('❌ ' + e.message);
+  }
+}
+
+function escapeHtml(text) {
+  const div = document.createElement('div');
+  div.textContent = text;
+  return div.innerHTML;
+}
+
+// 初始化
+loadConfig();
+loadRSS();
+loadAccount();
+  </script>
+</body>
+</html>
